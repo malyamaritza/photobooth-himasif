@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📸 CREANOVA Photobooth — HIMASIF SATU UNIVERSITY</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700;800&family=Playfair+Display:ital,wght@1,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-theme="dark">
+
+<!-- THEME TOGGLE -->
+<button class="theme-toggle" id="themeToggle" title="Ganti tema">
+  <span class="icon icon-sun">☀️</span>
+  <span class="icon icon-moon">🌙</span>
+</button>
+
+<div class="app">
+
+  <header class="brand">
+    <div class="brand-logo"><span class="dot"></span><span>Photobooth Online</span></div>
+    <h1 class="brand-title">Creanova Photobooth</h1>
+    <p class="brand-sub">Presented by <strong>HIMASIF SATU UNIVERSITY</strong></p>
+    <p class="brand-tagline">// capture the moment, keep the memory ✨</p>
+  </header>
+
+  <div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-steps">
+      <span id="pStep1" class="active">Jumlah</span>
+      <span id="pStep2">Design</span>
+      <span id="pStep3">Nama Tim</span>
+      <span id="pStep4">Sesi Foto</span>
+      <span id="pStep5">Hasil</span>
+      <span id="pStep6">Stiker</span>
+    </div>
+  </div>
+
+  <!-- STEP 1 -->
+  <section class="panel active" id="panel1">
+    <h2 class="panel-title">Berapa kali jepret?</h2>
+    <p class="panel-desc">Pilih jumlah foto yang mau kamu ambil. Semakin banyak, semakin seru photostrip-nya! 📸</p>
+    <div class="shot-grid" id="shotGrid"></div>
+    <div class="btn-row">
+      <button class="btn btn-primary" id="toStep2" disabled>Lanjut Pilih Design →</button>
+    </div>
+  </section>
+
+  <!-- STEP 2 -->
+  <section class="panel" id="panel2">
+    <h2 class="panel-title">Pilih design favoritmu</h2>
+    <p class="panel-desc">Setiap design punya warna & mood yang berbeda. Pilih yang paling cocok dengan tim kamu! 🎨</p>
+    <div class="design-grid" id="designGrid"></div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" id="backToStep1">← Kembali</button>
+      <button class="btn btn-primary" id="toStep3" disabled>Lanjut Isi Nama Tim →</button>
+    </div>
+  </section>
+
+  <!-- STEP 3 -->
+  <section class="panel" id="panel3">
+    <div class="team-input-wrap">
+      <span class="team-input-icon">👥</span>
+      <h2 class="panel-title">Siapa nama tim kamu?</h2>
+      <p class="panel-desc">Nama tim akan muncul di photostrip hasil akhir — jadi pilih yang keren ya!</p>
+      <div class="team-input-card">
+        <label class="team-label" for="teamName">Nama Tim / Pengunjung</label>
+        <input type="text" id="teamName" class="team-input" placeholder="cth: Tim Cyber Warriors" maxlength="30" autocomplete="off" />
+        <p class="team-hint">💡 Nama ini hanya muncul di photostrip, tidak akan ikut terfoto oleh kamera</p>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-ghost" id="backToStep2">← Kembali</button>
+        <button class="btn btn-primary" id="toStep4" disabled>Mulai Sesi Foto 📸</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 4 -->
+  <section class="panel" id="panel4">
+    <div class="session-grid">
+      <div>
+        <div class="camera-frame">
+          <video id="video" autoplay playsinline muted></video>
+          <div class="camera-hud">
+            <div class="hud-top">
+              <div class="hud-rec"><span class="rec-dot"></span><span>LIVE</span></div>
+              <div class="hud-event">
+                <span class="hud-title">CREANOVA</span>
+                <span class="hud-sub">HIMASIF SATU UNIVERSITY</span>
+              </div>
+            </div>
+            <div class="hud-bottom">PHOTOBOOTH • SYSTEM RESTORED ✔</div>
+          </div>
+          <div class="countdown-overlay" id="countdownOverlay"><div class="countdown-num" id="countdownNum">3</div></div>
+          <div class="flash" id="flash"></div>
+        </div>
+        <div id="errorMsg" class="error-msg hidden"></div>
+      </div>
+      <aside class="session-side">
+        <div class="team-badge">
+          <div class="team-badge-icon">👥</div>
+          <div class="team-badge-text">
+            <div class="team-badge-label">Nama Tim</div>
+            <div class="team-badge-name" id="teamNameDisplay">—</div>
+          </div>
+        </div>
+        <div class="session-info"><span class="label">DESIGN</span><span class="value" id="designInfo">—</span></div>
+        <div class="session-info"><span class="label">JEPRETAN</span><span class="value"><span id="shotNow">0</span> / <span id="shotMax">4</span></span></div>
+        <div class="shot-dots" id="shotDots"></div>
+        <button class="btn-capture" id="captureBtn"><span>📸</span><span>Mulai Jepret</span></button>
+        <div class="btn-row" style="margin-top:16px;">
+          <button class="btn btn-ghost" id="restartSession" style="flex:1; padding:14px;">🔄 Ulang</button>
+          <button class="btn btn-ghost" id="backToStep3b" style="flex:1; padding:14px;">✏️ Ganti Nama</button>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- STEP 5 -->
+  <section class="panel" id="panel5">
+    <h2 class="panel-title">✨ Photostrip Kamu Siap! ✨</h2>
+    <p class="panel-desc">Tambahkan stiker lucu sebelum download, atau langsung scan QR untuk lihat di HP.</p>
+    <div class="result-grid">
+      <div class="result-strip-wrap">
+        <div class="result-strip"><canvas id="photostripCanvas"></canvas></div>
+      </div>
+      <div class="result-side">
+        <div class="qr-card">
+          <h3>📱 Scan untuk Simpan</h3>
+          <div class="qr-box" id="qrBox"><span style="color:#333;font-size:12px;font-weight:700;">MEMBUAT QR...</span></div>
+          <p class="qr-hint">Buka kamera HP → arahkan ke QR → <strong>lihat & download</strong> photostrip</p>
+        </div>
+        <div class="result-actions">
+          <button class="btn btn-primary" id="goToStickerEditor">✏️ Edit dengan Stiker</button>
+        </div>
+        <div class="result-actions">
+          <button class="btn btn-primary" id="downloadBtn">⬇️ Download</button>
+          <button class="btn btn-ghost" id="restartAll">🔄 Buat Baru</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 6 -->
+  <section class="panel" id="panel6">
+    <h2 class="panel-title">✏️ Hias Photostrip Kamu</h2>
+    <p class="panel-desc">Klik stiker untuk menambah, lalu <strong>drag</strong> ke posisi favoritmu. Selesai? Klik "Simpan".</p>
+
+    <div class="editor-layout">
+      <div class="editor-canvas-wrap">
+        <canvas id="editorCanvas"></canvas>
+      </div>
+
+      <aside class="editor-panel">
+        <div class="editor-section-title">Kategori Stiker</div>
+        <div class="sticker-categories" id="stickerCategories"></div>
+
+        <div class="editor-section-title">Koleksi</div>
+        <div class="sticker-grid" id="stickerGrid"></div>
+
+        <div class="editor-section-title">Atur Stiker</div>
+
+        <div class="selection-hint" id="selectionHint">💡 Belum ada stiker yang dipilih</div>
+
+        <div class="editor-tools">
+          <div class="tool-row">
+            <label>Ukuran</label>
+            <input type="range" id="stickerSize" min="20" max="300" value="100" />
+            <span class="tool-val" id="stickerSizeVal">—</span>
+          </div>
+          <div class="tool-row">
+            <label>Rotasi</label>
+            <input type="range" id="stickerRotate" min="-180" max="180" value="0" />
+            <span class="tool-val" id="stickerRotateVal">—</span>
+          </div>
+
+          <div class="action-btns">
+            <button class="action-btn" id="bringFrontBtn">⬆️ Ke Depan</button>
+            <button class="action-btn" id="sendBackBtn">⬇️ Ke Belakang</button>
+            <button class="action-btn" id="duplicateBtn">📋 Duplikat</button>
+            <button class="action-btn danger" id="deleteStickerBtn">🗑️ Hapus</button>
+            <button class="action-btn" id="undoBtn">↩️ Undo</button>
+            <button class="action-btn danger" id="clearAllBtn">🧹 Reset</button>
+          </div>
+        </div>
+
+        <div class="editor-tip">💡 Tips: klik stiker di canvas untuk pilih, lalu drag. Ubah ukuran & rotasi pakai slider.</div>
+
+        <div class="btn-row" style="margin-top:22px;">
+          <button class="btn btn-ghost" id="backToResult" style="flex:1; padding:14px;">← Batal</button>
+          <button class="btn btn-primary" id="saveStickers" style="flex:1.5; padding:14px;">✅ Simpan</button>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+</div>
+
+<script src="script.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+
+</body>
+</html>
