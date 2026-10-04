@@ -80,7 +80,8 @@ const state = {
   shotCount: null, design: null, teamName: '', photos: [],
   stream: null, finalStripDataURL: null, isCapturing: false,
   editorBaseImage: null, editorStickers: [], editorSelected: null,
-  editorHistory: [], activeCategory: 'cyber'
+  editorHistory: [], activeCategory: 'cyber',
+  photoAspect: 4/3, qrJob: 0, shareUrl: null
 };
 
 /* ============================================================
@@ -273,7 +274,7 @@ async function startCaptureSequence() {
     if (i < remaining - 1) await sleep(800);
   }
   state.isCapturing = false;
-  setTimeout(() => { generatePhotostrip(); goToStep(5); triggerConfetti(); }, 600);
+  setTimeout(async () => { await generatePhotostrip(); goToStep(5); triggerConfetti(); }, 600);
 }
 
 function sleep(ms) { return new Promise(res => setTimeout(res, ms)); }
@@ -299,6 +300,7 @@ function takeShot() {
     const vw = video.videoWidth, vh = video.videoHeight;
     const canvas = document.createElement('canvas');
     canvas.width = vw; canvas.height = vh;
+    state.photoAspect = vw / vh;
     const ctx = canvas.getContext('2d');
     ctx.save(); ctx.translate(vw, 0); ctx.scale(-1, 1);
     ctx.drawImage(video, 0, 0, vw, vh);
@@ -313,16 +315,24 @@ $('restartSession').addEventListener('click', () => { state.photos = []; state.i
 /* ============================================================
    GENERATE PHOTOSTRIP
    ============================================================ */
-function generatePhotostrip() {
+async function generatePhotostrip() {
+  try {
+    await Promise.all([
+      document.fonts.load('italic 700 54px "Playfair Display"'),
+      document.fonts.load('bold 34px "Space Grotesk"'),
+      document.fonts.load('bold 16px "JetBrains Mono"')
+    ]);
+  } catch (e) {}
   const design = state.design;
   const shots = state.shotCount;
   const teamName = state.teamName;
   const W = 600, HEADER_H = 140, FOOTER_H = 180, PADDING = 22, SLOT_GAP = 14;
-  let slotH;
-  if (shots === 1) slotH = 480;
-  else if (shots === 2) slotH = 340;
-  else if (shots === 3) slotH = 260;
-  else slotH = 220;
+  // Slot mengikuti rasio asli foto hasil jepretan -> tidak gepeng / tidak ter-crop
+  const aspect = state.photoAspect || 4 / 3;
+  const maxSlotH = [0, 640, 480, 400, 340][shots] || 340;
+  let slotW = shots <= 2 ? W - PADDING * 2 : 470;
+  slotW = Math.round(Math.min(slotW, maxSlotH * aspect));
+  const slotH = Math.round(slotW / aspect);
   const H = HEADER_H + shots * slotH + (shots - 1) * SLOT_GAP + FOOTER_H + PADDING * 2;
 
   photostripCanvas.width = W; photostripCanvas.height = H;
@@ -363,9 +373,8 @@ function generatePhotostrip() {
   ctx.beginPath(); ctx.moveTo(50, HEADER_H); ctx.lineTo(W - 50, HEADER_H); ctx.stroke();
   ctx.restore();
 
-  const slotW = W - PADDING * 2;
   const startY = HEADER_H + PADDING;
-  const slotX = PADDING;
+  const slotX = Math.round((W - slotW) / 2);
 
   state.photos.forEach((_, i) => {
     const y = startY + i * (slotH + SLOT_GAP);
@@ -401,10 +410,10 @@ function generatePhotostrip() {
   ctx.save();
   ctx.font = '12px "JetBrains Mono", monospace';
   ctx.textAlign = 'center';
-  ctx.fillStyle = design.accent; ctx.globalAlpha = 0.75;
+  ctx.fillStyle = design.accent; ctx.globalAlpha = 0.9;
   const ts = new Date().toLocaleString('id-ID', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
   ctx.fillText(ts, W / 2, footerY + 118);
-  ctx.globalAlpha = 0.5;
+  ctx.globalAlpha = 0.8;
   ctx.fillText(EVENT.tagline, W / 2, footerY + 140);
   ctx.restore();
 
@@ -466,75 +475,122 @@ function drawBackgroundDeco(ctx, W, H, design) {
 /* ============================================================
    QR
    ============================================================ */
-function generateQRCode() {
-  qrBox.innerHTML = '<span style="color:#333;font-size:12px;font-weight:700;">MEMBUAT QR...</span>';
-  let stripSrc = state.finalStripDataURL;
-  const shareHtml = `<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Photostrip — ${escapeHtml(state.teamName)}</title>
-<style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:'Space Grotesk',sans-serif;}
-body{background:linear-gradient(145deg,#f5f0ff,#e8deff);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;color:#2a1f4d;}
-.card{max-width:420px;width:100%;background:linear-gradient(145deg,#ffffff,#f0e8ff);border-radius:32px;padding:32px;text-align:center;box-shadow:inset 3px 3px 6px rgba(255,255,255,0.95),inset -5px -5px 10px rgba(167,139,250,0.2),12px 12px 30px rgba(167,139,250,0.25);}
-.brand{font-family:serif;font-style:italic;font-size:2rem;font-weight:700;background:linear-gradient(135deg,#8b5cf6,#d946ef);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px;filter:drop-shadow(3px 3px 0 rgba(167,139,250,0.3));}
-.sub{font-size:0.65rem;letter-spacing:5px;color:#6b5b95;text-transform:uppercase;margin-bottom:22px;font-weight:700;}
-img{width:100%;border-radius:20px;margin-bottom:22px;box-shadow:0 12px 30px rgba(167,139,250,0.3);}
-.team{font-size:1.3rem;font-weight:800;margin-bottom:18px;color:#8b5cf6;}
-.btn{display:inline-block;padding:16px 36px;border-radius:999px;background:linear-gradient(145deg,#a78bfa,#8b5cf6);color:#fff;text-decoration:none;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;font-size:0.85rem;box-shadow:inset 3px 3px 5px rgba(255,255,255,0.4),inset -3px -3px 6px rgba(0,0,0,0.15),8px 8px 20px rgba(139,92,246,0.4);}
-.hint{font-size:0.75rem;color:#9585b8;margin-top:18px;font-weight:500;}
-</style></head><body><div class="card">
-<div class="brand">Creanova</div>
-<div class="sub">HIMASIF SATU UNIVERSITY</div>
-<div class="team">${escapeHtml(state.teamName)}</div>
-<img src="${stripSrc}" alt="Photostrip">
-<a class="btn" download="creanova-${escapeHtml(state.teamName).replace(/\s+/g,'-')}.png" href="${stripSrc}">⬇️ Download</a>
-<p class="hint">Terima kasih sudah mampir! ✨<br>— ${EVENT.tagline} —</p>
-</div></body></html>`;
+const UPLOAD_CONFIG = {
+  // OPSIONAL: isi API key gratis dari https://api.imgbb.com/ agar link lebih stabil & tahan lama.
+  IMGBB_API_KEY: '',
+  IMGBB_EXPIRATION: 604800,            // 7 hari (detik). Isi 0 untuk permanen
+  MAX_UPLOAD_BYTES: 1.5 * 1024 * 1024, // di atas ini otomatis dikompres
+  TIMEOUT_MS: 30000
+};
 
-  let finalUrl = 'data:text/html;charset=utf-8,' + encodeURIComponent(shareHtml);
-  if (finalUrl.length > 2500) {
-    const tiny = compressCanvasToJPEG(photostripCanvas, 0.55, 380);
-    const tinyHtml = shareHtml.replace(stripSrc, tiny);
-    finalUrl = 'data:text/html;charset=utf-8,' + encodeURIComponent(tinyHtml);
-  }
-  tryQRCodeLib(finalUrl).then(ok => { if (!ok) useQuickChart(finalUrl); });
+function canvasToBlob(canvas, type, quality) {
+  return new Promise(res => canvas.toBlob(b => res(b), type, quality));
 }
 
-function tryQRCodeLib(text) {
-  return new Promise(resolve => {
-    if (typeof QRCode === 'undefined') { resolve(false); return; }
+/* Kompres bertahap: PNG asli -> JPEG kualitas tinggi (96%->80%) -> baru kecilkan dimensi sedikit.
+   Berhenti di langkah pertama yang muat batas ukuran, jadi kualitas selalu dipertahankan maksimal. */
+async function compressForUpload(canvas, maxBytes) {
+  let blob = await canvasToBlob(canvas, 'image/png');
+  if (blob && blob.size <= maxBytes) return { blob, ext: 'png' };
+  for (const q of [0.96, 0.92, 0.88, 0.84, 0.8]) {
+    blob = await canvasToBlob(canvas, 'image/jpeg', q);
+    if (blob && blob.size <= maxBytes) return { blob, ext: 'jpg' };
+  }
+  for (let scale = 0.9; scale >= 0.5; scale -= 0.1) {
+    const t = document.createElement('canvas');
+    t.width = Math.round(canvas.width * scale); t.height = Math.round(canvas.height * scale);
+    const c = t.getContext('2d');
+    c.imageSmoothingQuality = 'high';
+    c.drawImage(canvas, 0, 0, t.width, t.height);
+    blob = await canvasToBlob(t, 'image/jpeg', 0.88);
+    if (blob && blob.size <= maxBytes) return { blob, ext: 'jpg' };
+  }
+  return { blob, ext: 'jpg' };
+}
+
+function fetchWithTimeout(url, opts) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), UPLOAD_CONFIG.TIMEOUT_MS);
+  return fetch(url, { ...opts, signal: ctrl.signal }).finally(() => clearTimeout(timer));
+}
+
+async function uploadImage(blob, filename) {
+  // 1) ImgBB (jika API key diisi)
+  if (UPLOAD_CONFIG.IMGBB_API_KEY) {
     try {
-      qrBox.innerHTML = '';
-      new QRCode(qrBox, { text, width: 220, height: 220, colorDark: '#000000', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.L });
-      setTimeout(() => resolve(!!(qrBox.querySelector('canvas') || qrBox.querySelector('img'))), 200);
-    } catch (e) { resolve(false); }
-  });
+      const fd = new FormData();
+      fd.append('image', blob, filename);
+      let url = `https://api.imgbb.com/1/upload?key=${encodeURIComponent(UPLOAD_CONFIG.IMGBB_API_KEY)}`;
+      if (UPLOAD_CONFIG.IMGBB_EXPIRATION) url += `&expiration=${UPLOAD_CONFIG.IMGBB_EXPIRATION}`;
+      const res = await fetchWithTimeout(url, { method: 'POST', body: fd });
+      const json = await res.json();
+      if (json && json.success && json.data && json.data.url) return json.data.url;
+    } catch (e) { console.warn('ImgBB gagal', e); }
+  }
+  // 2) tmpfiles.org (tanpa API key, file tersedia ± 60 menit)
+  try {
+    const fd = new FormData();
+    fd.append('file', blob, filename);
+    const res = await fetchWithTimeout('https://tmpfiles.org/api/v1/upload', { method: 'POST', body: fd });
+    const json = await res.json();
+    const u = json && json.data && json.data.url;
+    if (u) return u.replace(/^http:/, 'https:').replace('tmpfiles.org/', 'tmpfiles.org/dl/');
+  } catch (e) { console.warn('tmpfiles gagal', e); }
+  throw new Error('Upload gagal');
 }
 
-function useQuickChart(text) {
+function showQRStatus(msg) {
+  qrBox.innerHTML = `<div class="qr-status"><div class="qr-spinner"></div>${msg}</div>`;
+  removeQRLink();
+}
+
+function removeQRLink() { const o = document.getElementById('qrLink'); if (o) o.remove(); }
+
+function showQRError() {
+  qrBox.innerHTML = `<div class="qr-status">⚠️ QR belum bisa dibuat<br><span style="font-weight:600;letter-spacing:0">Cek koneksi internet.<br>Kamu tetap bisa pakai tombol Download.</span><br><button class="qr-retry" id="qrRetry">🔄 COBA LAGI</button></div>`;
+  $('qrRetry').addEventListener('click', generateQRCode);
+}
+
+async function generateQRCode() {
+  const job = ++state.qrJob;
+  state.shareUrl = null;
+  showQRStatus('MENYIAPKAN QR...');
+  try {
+    const { blob, ext } = await compressForUpload(photostripCanvas, UPLOAD_CONFIG.MAX_UPLOAD_BYTES);
+    if (job !== state.qrJob) return;
+    if (!blob) throw new Error('Gagal membuat gambar');
+    showQRStatus('MENGUNGGAH FOTO...');
+    const slug = (state.teamName || 'photostrip').replace(/[^a-z0-9]+/gi, '-').toLowerCase();
+    const url = await uploadImage(blob, `creanova-${slug}-${Date.now()}.${ext}`);
+    if (job !== state.qrJob) return;
+    state.shareUrl = url;
+    renderQR(url);
+  } catch (e) {
+    console.error(e);
+    if (job === state.qrJob) showQRError();
+  }
+}
+
+function renderQR(url) {
   qrBox.innerHTML = '';
-  const encoded = encodeURIComponent(text);
-  if (encoded.length > 1800) {
-    qrBox.innerHTML = `<div style="color:#333;font-size:11px;padding:16px;text-align:center;font-weight:700;line-height:1.5;">⚠️ Data terlalu besar untuk QR.<br>Gunakan tombol <b>Download</b>.</div>`;
-    return;
+  const ok = (typeof QRCode !== 'undefined') && (() => {
+    try {
+      new QRCode(qrBox, { text: url, width: 220, height: 220, colorDark: '#000000', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+      return true;
+    } catch (e) { return false; }
+  })();
+  if (!ok) {
+    const img = document.createElement('img');
+    img.src = `https://quickchart.io/qr?text=${encodeURIComponent(url)}&size=220&margin=1&ecLevel=M`;
+    img.width = 220; img.height = 220; img.alt = 'QR';
+    img.onerror = showQRError;
+    qrBox.appendChild(img);
   }
-  const img = document.createElement('img');
-  img.src = `https://quickchart.io/qr?text=${encoded}&size=220&margin=1&ecLevel=L`;
-  img.width = 220; img.height = 220;
-  img.style.display = 'block';
-  img.onerror = () => { qrBox.innerHTML = `<div style="color:#333;font-size:11px;padding:16px;text-align:center;font-weight:700;">⚠️ QR gagal dibuat.</div>`; };
-  qrBox.appendChild(img);
-}
-
-function compressCanvasToJPEG(canvas, quality = 0.6, maxWidth = null) {
-  let src = canvas;
-  if (maxWidth && canvas.width > maxWidth) {
-    const temp = document.createElement('canvas');
-    const scale = maxWidth / canvas.width;
-    temp.width = maxWidth; temp.height = canvas.height * scale;
-    const tctx = temp.getContext('2d');
-    tctx.drawImage(canvas, 0, 0, temp.width, temp.height);
-    src = temp;
-  }
-  return src.toDataURL('image/jpeg', quality);
+  removeQRLink();
+  const p = document.createElement('p');
+  p.id = 'qrLink'; p.className = 'qr-link';
+  p.innerHTML = `Atau buka: <a href="${escapeHtml(url)}" target="_blank" rel="noopener">${escapeHtml(url)}</a>`;
+  qrBox.parentElement.insertBefore(p, qrBox.nextSibling);
 }
 
 function escapeHtml(str) {
@@ -559,6 +615,7 @@ $('restartAll').addEventListener('click', () => {
   state.photos = []; state.finalStripDataURL = null; state.isCapturing = false;
   state.editorStickers = []; state.editorSelected = null; state.editorBaseImage = null;
   teamNameInput.value = '';
+  state.qrJob++; state.shareUrl = null; removeQRLink();
   qrBox.innerHTML = '<span style="color:#333;font-size:12px;font-weight:700;">MEMBUAT QR...</span>';
   document.querySelectorAll('.shot-card, .design-card').forEach(c => c.classList.remove('selected'));
   $('toStep2').disabled = true; $('toStep3').disabled = true; $('toStep4').disabled = true;
