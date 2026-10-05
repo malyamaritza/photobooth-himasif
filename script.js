@@ -477,9 +477,14 @@ function drawBackgroundDeco(ctx, W, H, design) {
    ============================================================ */
 const UPLOAD_CONFIG = {
   // OPSIONAL: isi API key gratis dari https://api.imgbb.com/ agar link lebih stabil & tahan lama.
+  // === OPSI A (DISARANKAN): Cloudinary — gratis, tanpa iklan, link stabil ===
+  // Dashboard -> Cloud name. Settings -> Upload -> Add upload preset -> Signing mode: UNSIGNED
+  CLOUDINARY_CLOUD_NAME: 'kuksomrm',
+  CLOUDINARY_UPLOAD_PRESET: 'vz1jycaa',
+  // === OPSI B: ImgBB ===
   IMGBB_API_KEY: '',
   IMGBB_EXPIRATION: 604800,            // 7 hari (detik). Isi 0 untuk permanen
-  MAX_UPLOAD_BYTES: 1.5 * 1024 * 1024, // di atas ini otomatis dikompres
+  MAX_UPLOAD_BYTES: 3 * 1024 * 1024,   // di atas ini otomatis dikompres
   TIMEOUT_MS: 30000
 };
 
@@ -515,6 +520,18 @@ function fetchWithTimeout(url, opts) {
 }
 
 async function uploadImage(blob, filename) {
+  // 0) Cloudinary (unsigned upload)
+  if (UPLOAD_CONFIG.CLOUDINARY_CLOUD_NAME && UPLOAD_CONFIG.CLOUDINARY_UPLOAD_PRESET) {
+    try {
+      const fd = new FormData();
+      fd.append('file', blob, filename);
+      fd.append('upload_preset', UPLOAD_CONFIG.CLOUDINARY_UPLOAD_PRESET);
+      const res = await fetchWithTimeout(`https://api.cloudinary.com/v1_1/${encodeURIComponent(UPLOAD_CONFIG.CLOUDINARY_CLOUD_NAME)}/image/upload`, { method: 'POST', body: fd });
+      const json = await res.json();
+      if (json && json.secure_url) return json.secure_url;
+      console.warn('Cloudinary:', json);
+    } catch (e) { console.warn('Cloudinary gagal', e); }
+  }
   // 1) ImgBB (jika API key diisi)
   if (UPLOAD_CONFIG.IMGBB_API_KEY) {
     try {
@@ -564,11 +581,23 @@ async function generateQRCode() {
     const url = await uploadImage(blob, `creanova-${slug}-${Date.now()}.${ext}`);
     if (job !== state.qrJob) return;
     state.shareUrl = url;
-    renderQR(url);
+    renderQR(buildShareLink(url));
   } catch (e) {
     console.error(e);
     if (job === state.qrJob) showQRError();
   }
+}
+
+/* QR mengarah ke halaman download.html milik sendiri (bersih, tanpa iklan).
+   Kalau web dibuka dari file:// atau localhost, HP tidak bisa membuka halaman itu -> pakai link foto langsung. */
+function buildShareLink(imgUrl) {
+  const local = location.protocol === 'file:' || ['localhost', '127.0.0.1', '::1'].includes(location.hostname);
+  if (local) return imgUrl;
+  const u = new URL('download.html', location.href);
+  u.search = ''; u.hash = '';
+  u.searchParams.set('u', imgUrl);
+  u.searchParams.set('n', state.teamName || '');
+  return u.toString();
 }
 
 function renderQR(url) {
@@ -589,7 +618,7 @@ function renderQR(url) {
   removeQRLink();
   const p = document.createElement('p');
   p.id = 'qrLink'; p.className = 'qr-link';
-  p.innerHTML = `Atau buka: <a href="${escapeHtml(url)}" target="_blank" rel="noopener">${escapeHtml(url)}</a>`;
+  p.innerHTML = `<a href="${escapeHtml(url)}" target="_blank" rel="noopener">🔗 Buka halaman download</a>`;
   qrBox.parentElement.insertBefore(p, qrBox.nextSibling);
 }
 
