@@ -2,20 +2,20 @@
    THEME TOGGLE
    ============================================================ */
 const themeToggle = document.getElementById('themeToggle');
-const savedTheme = localStorage.getItem('creanova-theme') || 'dark';
+const savedTheme = localStorage.getItem('creatchology-theme') || 'dark';
 document.body.setAttribute('data-theme', savedTheme);
 
 themeToggle.addEventListener('click', () => {
   const current = document.body.getAttribute('data-theme');
   const next = current === 'dark' ? 'light' : 'dark';
   document.body.setAttribute('data-theme', next);
-  localStorage.setItem('creanova-theme', next);
+  localStorage.setItem('creatchology-theme', next);
 });
 
 /* ============================================================
    EVENT
    ============================================================ */
-const EVENT = { name:'CREANOVA', organizer:'HIMASIF SATU UNIVERSITY', tagline:'PHOTOBOOTH • SYSTEM RESTORED ✔' };
+const EVENT = { name:'CREATCHOLOGY', organizer:'HIMASIF SATU UNIVERSITY', tagline:'PHOTOBOOTH • SYSTEM RESTORED ✔' };
 
 const SHOT_PRESETS = [
   { count:1, label:'Solo Shot' },
@@ -61,7 +61,7 @@ const STICKER_LIBRARY = [
   { id:'cool', name:'Cool', category:'emotion', svg: (c='#67e8f9') => `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect x="10" y="42" width="35" height="16" rx="6" fill="${c}" stroke="#1a1430" stroke-width="4"/><rect x="55" y="42" width="35" height="16" rx="6" fill="${c}" stroke="#1a1430" stroke-width="4"/><line x1="45" y1="50" x2="55" y2="50" stroke="#1a1430" stroke-width="4"/><line x1="5" y1="50" x2="10" y2="50" stroke="#1a1430" stroke-width="4"/><line x1="90" y1="50" x2="95" y2="50" stroke="#1a1430" stroke-width="4"/></svg>` },
   { id:'lips', name:'Lips', category:'emotion', svg: (c='#f43f5e') => `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M50 30 Q30 20 15 45 Q25 55 50 55 Q75 55 85 45 Q70 20 50 30 Z" fill="${c}" stroke="#1a1430" stroke-width="4" stroke-linejoin="round"/><path d="M15 45 Q30 75 50 80 Q70 75 85 45 Q75 65 50 68 Q25 65 15 45 Z" fill="${c}" stroke="#1a1430" stroke-width="4" stroke-linejoin="round"/></svg>` },
   { id:'wink', name:'Wink', category:'emotion', svg: (c='#fbbf24') => `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="42" fill="${c}" stroke="#1a1430" stroke-width="4"/><circle cx="65" cy="42" r="6" fill="#1a1430"/><path d="M25 42 Q35 35 45 42" stroke="#1a1430" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M30 62 Q50 82 70 62" stroke="#1a1430" stroke-width="5" fill="none" stroke-linecap="round"/></svg>` },
-  { id:'txt-creanova', name:'Creanova', category:'text', svg: () => `<svg viewBox="0 0 200 80" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="4" width="192" height="72" rx="20" fill="#a78bfa" stroke="#7c5dd8" stroke-width="4"/><text x="100" y="52" text-anchor="middle" font-family="serif" font-style="italic" font-size="32" font-weight="900" fill="#ffffff" filter="drop-shadow(2px 2px 0 #7c5dd8)">CREANOVA</text></svg>` },
+  { id:'txt-creatchology', name:'Creatchology', category:'text', svg: () => `<svg viewBox="0 0 200 80" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="4" width="192" height="72" rx="20" fill="#a78bfa" stroke="#7c5dd8" stroke-width="4"/><text x="100" y="52" text-anchor="middle" font-family="serif" font-style="italic" font-size="32" font-weight="900" fill="#ffffff" filter="drop-shadow(2px 2px 0 #7c5dd8)">CREATCHOLOGY</text></svg>` },
   { id:'txt-himasif', name:'Himasif', category:'text', svg: () => `<svg viewBox="0 0 200 80" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="4" width="192" height="72" rx="20" fill="#67e8f9" stroke="#0891b2" stroke-width="4"/><text x="100" y="52" text-anchor="middle" font-family="monospace" font-size="28" font-weight="900" fill="#0e7490">HIMASIF</text></svg>` },
   { id:'txt-univ', name:'Univ', category:'text', svg: () => `<svg viewBox="0 0 220 80" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="4" width="212" height="72" rx="36" fill="#f0abfc" stroke="#c026d3" stroke-width="4"/><text x="110" y="52" text-anchor="middle" font-family="sans-serif" font-size="24" font-weight="900" fill="#86198f">SATU UNIV</text></svg>` },
   { id:'txt-wow', name:'Wow!', category:'text', svg: () => `<svg viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg"><polygon points="100,5 195,50 100,95 5,50" fill="#fbbf24" stroke="#d97706" stroke-width="4" stroke-linejoin="round"/><text x="100" y="68" text-anchor="middle" font-family="serif" font-style="italic" font-size="44" font-weight="900" fill="#78350f">WOW!</text></svg>` },
@@ -172,7 +172,7 @@ function renderDesigns() {
     const headerFont = design.headerStyle === 'serif' ? "'Playfair Display', serif" : design.headerStyle === 'mono' ? "'JetBrains Mono', monospace" : "'Space Grotesk', sans-serif";
     card.innerHTML = `
       <div class="design-preview" style="background:linear-gradient(180deg,${design.bg1},${design.bg2});border:2px solid ${design.border};">
-        <div class="mini-header" style="color:${design.text};font-family:${headerFont};text-shadow:0 1px 4px ${design.accent};">CREANOVA</div>
+        <div class="mini-header" style="color:${design.text};font-family:${headerFont};text-shadow:0 1px 4px ${design.accent};">CREATCHOLOGY</div>
         <div class="mini-slots">${slotsHtml}</div>
         <div class="mini-footer" style="color:${design.accent};">★ HIMASIF ★</div>
       </div>
@@ -362,7 +362,7 @@ async function generatePhotostrip() {
     : 'bold 50px "Space Grotesk", sans-serif';
   ctx.font = headerFont;
   ctx.fillStyle = design.text; ctx.shadowColor = design.accent; ctx.shadowBlur = 25;
-  ctx.fillText('CREANOVA', W / 2, 60);
+  ctx.fillText('CREATCHOLOGY', W / 2, 60);
   ctx.font = 'bold 16px "JetBrains Mono", monospace';
   ctx.fillStyle = design.accent; ctx.shadowColor = design.accent; ctx.shadowBlur = 12;
   ctx.fillText('HIMASIF SATU UNIVERSITY', W / 2, 100);
@@ -578,7 +578,7 @@ async function generateQRCode() {
     if (!blob) throw new Error('Gagal membuat gambar');
     showQRStatus('MENGUNGGAH FOTO...');
     const slug = (state.teamName || 'photostrip').replace(/[^a-z0-9]+/gi, '-').toLowerCase();
-    const url = await uploadImage(blob, `creanova-${slug}-${Date.now()}.${ext}`);
+    const url = await uploadImage(blob, `creatchology-${slug}-${Date.now()}.${ext}`);
     if (job !== state.qrJob) return;
     state.shareUrl = url;
     renderQR(buildShareLink(url));
@@ -633,7 +633,7 @@ $('downloadBtn').addEventListener('click', () => {
   if (!state.finalStripDataURL) return;
   const safeName = state.teamName.replace(/\s+/g, '-').toLowerCase();
   const link = document.createElement('a');
-  link.download = `creanova-${safeName}-${Date.now()}.png`;
+  link.download = `creatchology-${safeName}-${Date.now()}.png`;
   link.href = state.finalStripDataURL;
   link.click();
 });
